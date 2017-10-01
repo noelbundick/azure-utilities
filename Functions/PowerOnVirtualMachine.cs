@@ -60,7 +60,7 @@ namespace Functions
                 else if (targetVm.OSType == OperatingSystemTypes.Windows)
                 {
                     // Download an .rdp file for Windows
-                    var rdpFileContents = $"full address:s:{fqdn}:3389\r\nprompt for credentials:i:1\r\nadministrative session:i:1\r\nusername: s:.\\{username}";
+                    var rdpFileContents = $"full address:s:{fqdn}:3389\r\nprompt for credentials:i:1\r\nadministrative session:i:1\r\nusername: s:{username}";
                     var content = new StringContent(rdpFileContents);
                     content.Headers.ContentDisposition = new ContentDispositionHeaderValue("attachment")
                     {
