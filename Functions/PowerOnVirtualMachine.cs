@@ -13,6 +13,8 @@ using System.Configuration;
 using Microsoft.Azure.Management.Compute.Fluent;
 using System.IO;
 using System.Text;
+using Microsoft.Azure.Management.Compute.Fluent.Models;
+using System.Net.Http.Headers;
 
 namespace Functions
 {
@@ -42,13 +44,41 @@ namespace Functions
             if (redirectToLogin)
             {
                 var fqdn = targetVm.GetPrimaryPublicIPAddress().Fqdn;
-                var redirectLocation = $"ssh://{username}@{fqdn}";
                 await startTask;
 
-                var response = req.CreateResponse(HttpStatusCode.OK);
-                var content = $"<html><head><meta http-equiv=\"refresh\" content=\"0;URL={redirectLocation}\"></head><body><a href=\"{redirectLocation}\">{redirectLocation}</a></body></html>";
-                response.Content = new StringContent(content, Encoding.UTF8, "text/html");
-                return response;
+                if (targetVm.OSType == OperatingSystemTypes.Linux)
+                {
+                    // Hacky redirect to ssh protocol for Linux
+                    // Can't just use HTTP redirect because .NET will always treat the Location header as a Uri and add a trailing slash
+                    var redirectLocation = $"ssh://{username}@{fqdn}";
+                    var content = $"<html><head><meta http-equiv=\"refresh\" content=\"0;URL={redirectLocation}\"></head><body><a href=\"{redirectLocation}\">{redirectLocation}</a></body></html>";
+
+                    var response = req.CreateResponse(HttpStatusCode.OK);
+                    response.Content = new StringContent(content, Encoding.UTF8, "text/html");
+                    return response;
+                }
+                else if (targetVm.OSType == OperatingSystemTypes.Windows)
+                {
+                    // Download an .rdp file for Windows
+                    var rdpFileContents = $"full address:s:{fqdn}:3389\r\nprompt for credentials:i:1\r\nadministrative session:i:1\r\nusername: s:.\\{username}";
+                    var content = new StringContent(rdpFileContents);
+                    content.Headers.ContentDisposition = new ContentDispositionHeaderValue("attachment")
+                    {
+                        FileName = $"{vmName}.rdp"
+                    };
+                    content.Headers.ContentType = new MediaTypeHeaderValue("application/rdp")
+                    {
+                        CharSet = "utf-8"
+                    };
+
+                    var response = req.CreateResponse(HttpStatusCode.OK);
+                    response.Content = content;
+                    return response;
+                }
+                else
+                {
+                    return req.CreateResponse(HttpStatusCode.OK, $"{vmName} is running");
+                }
             }
             else
             {
