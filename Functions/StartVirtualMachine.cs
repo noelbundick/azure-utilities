@@ -1,10 +1,6 @@
-using System;
 using System.Linq;
-using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
-using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Azure.WebJobs.Host;
 using Microsoft.Azure.Management.Fluent;
 using Microsoft.Azure.Management.ResourceManager.Fluent.Authentication;
@@ -15,26 +11,27 @@ using System.IO;
 using System.Text;
 using Microsoft.Azure.Management.Compute.Fluent.Models;
 using System.Net.Http.Headers;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
+using Newtonsoft.Json;
 
 namespace Functions
 {
-    public static class StartVirtualMachine
+    public class StartVirtualMachine
     {
-        private static IAzure _azure = GetAzure();
-
-        [FunctionName("StartVirtualMachine")]
-        public static async Task<HttpResponseMessage> RunAsync([HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)]HttpRequestMessage req, TraceWriter log)
+        public async Task<IActionResult> RunAsync(HttpRequest req, TraceWriter log)
         {
+            var azure = GetAzure();
             var vmName = await GetNameAsync(req, "vm");
             if (vmName == null)
-                return req.CreateResponse(HttpStatusCode.BadRequest, "Please pass a virtual machine name on the query string or in the request body");
+                return new BadRequestObjectResult("Please pass a virtual machine name on the query string or in the request body");
 
             var username = await GetNameAsync(req, "username");
             var redirectToLogin = false;
             if (!string.IsNullOrWhiteSpace(username))
                 redirectToLogin = true;
             
-            var vms = await _azure.VirtualMachines.ListAsync();
+            var vms = await azure.VirtualMachines.ListAsync();
             var targetVm = vms.FirstOrDefault(vm => vm.Name == vmName);
 
             var startTask = (targetVm.PowerState == PowerState.Running)
@@ -52,10 +49,7 @@ namespace Functions
                     // Can't just use HTTP redirect because .NET will always treat the Location header as a Uri and add a trailing slash
                     var redirectLocation = $"ssh://{username}@{fqdn}";
                     var content = $"<html><head><meta http-equiv=\"refresh\" content=\"0;URL={redirectLocation}\"></head><body><a href=\"{redirectLocation}\">{redirectLocation}</a></body></html>";
-
-                    var response = req.CreateResponse(HttpStatusCode.OK);
-                    response.Content = new StringContent(content, Encoding.UTF8, "text/html");
-                    return response;
+                    return new OkObjectResult(content);
                 }
                 else if (targetVm.OSType == OperatingSystemTypes.Windows)
                 {
@@ -70,35 +64,35 @@ namespace Functions
                     {
                         CharSet = "utf-8"
                     };
-
-                    var response = req.CreateResponse(HttpStatusCode.OK);
-                    response.Content = content;
-                    return response;
+                    
+                    return new OkObjectResult(content);
                 }
                 else
                 {
-                    return req.CreateResponse(HttpStatusCode.OK, $"{vmName} is running");
+                    return new OkObjectResult($"{vmName} is running");
                 }
             }
             else
             {
                 await startTask;
-                return req.CreateResponse(HttpStatusCode.OK, $"{vmName} is running");
+                return new OkObjectResult($"{vmName} is running");
             }
         }
 
-        private static async Task<string> GetNameAsync(HttpRequestMessage req, string key)
+        private static async Task<string> GetNameAsync(HttpRequest req, string key)
         {
             // parse query parameter
-            var name = req.GetQueryNameValuePairs()
-                .FirstOrDefault(q => string.Equals(q.Key, key, StringComparison.OrdinalIgnoreCase))
-                .Value;
+            var name = req.Query[key].FirstOrDefault();
+            if (name != null)
+                return name;
 
-            // Get request body
-            dynamic data = await req.Content.ReadAsAsync<object>();
-
-            // Set name to query string or body data
-            return name ?? data?.name;
+            // If key isn't present there, look inside request body
+            using (var reader = new StreamReader(req.Body, Encoding.UTF8))
+            {
+                var json = await reader.ReadToEndAsync();
+                dynamic data = JsonConvert.DeserializeObject(json);
+                return data?.name;
+            }
         }
 
         private static IAzure GetAzure()

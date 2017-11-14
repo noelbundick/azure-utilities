@@ -1,0 +1,15 @@
+{
+  "bindings": [
+    {
+      "type": "httpTrigger",
+      "methods": [
+        "get",
+        "post"
+      ],
+      "authLevel": "function",
+      "name": "req"
+    }
+  ],
+  "scriptFile": "../Functions.dll",
+  "entryPoint": "Functions.StartVirtualMachine.RunAsync"
+}
