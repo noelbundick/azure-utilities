@@ -11,11 +11,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>ad7238b7-17df-4c47-9b93-a57d2245626f</ProjectGuid>
+    <ProjectGuid>dd94880a-b8ca-4dfe-a5f1-2110b70ec50e</ProjectGuid>
   </PropertyGroup>
   <PropertyGroup>
-    <TargetFrameworkIdentifier>Deployment</TargetFrameworkIdentifier>
-    <TargetFrameworkVersion>1.0</TargetFrameworkVersion>
     <PrepareForBuildDependsOn>
     </PrepareForBuildDependsOn>
   </PropertyGroup>
@@ -30,6 +28,7 @@
     <None Include="Deployment.targets">
       <Visible>False</Visible>
     </None>
+    <Content Include="Deploy-AzureResourceGroup.ps1" />
   </ItemGroup>
   <Target Name="GetReferenceAssemblyPaths" />
 </Project>

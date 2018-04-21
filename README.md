@@ -13,6 +13,16 @@ Starts a virtual machine by name
   * Windows: downloads an `.rdp` file to connect
 * Only has access to the permissions you grant to its Service Principal
 
+## StartVSTSBuildAgent / StopVSTSBuildAgent
+
+Creates or destroys an Azure Container Instance that runs the VSTS Build Agent
+
+* Dockerfile is in the `vsts-build-agent` folder
+* Creates Container Groups in the `vsts` Resource Group
+* You'll need to provide AppSettings in your Function App for `VSTS_AGENT_INPUT_URL` and `VSTS_AGENT_INPUT_TOKEN`
+* Places VSTS agents in a pool named `AzureContainerInstance`
+* Uses the same Service Principal as the other Functions to interact with your Azure Subscription
+
 ### Setup
 
 ```bash
