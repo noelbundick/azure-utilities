@@ -5,7 +5,8 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="1.0.24" />
-    <PackageReference Include="Microsoft.Azure.Services.AppAuthentication" Version="1.2.0-preview" />
+    <!-- <PackageReference Include="Microsoft.Azure.Services.AppAuthentication" Version="1.2.0-preview" /> -->
+    <ProjectReference Include="../Azure.Services.AppAuthentication/Microsoft.Azure.Services.AppAuthentication.csproj" />
     <PackageReference Include="Microsoft.Azure.Management.Fluent" Version="1.17.0" />
   </ItemGroup>
   <ItemGroup>

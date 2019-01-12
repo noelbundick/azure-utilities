@@ -5,6 +5,7 @@
         <Version>1.2.0-preview</Version>
         <AssemblyName>Microsoft.Azure.Services.AppAuthentication</AssemblyName>
         <PackageTags>Azure Authentication AppAuthentication</PackageTags>
+        <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 	<PackageReleaseNotes>
 		<![CDATA[
 			Documentation can be found at https://go.microsoft.com/fwlink/p/?linkid=862452.

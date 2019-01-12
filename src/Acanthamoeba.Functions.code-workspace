@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"path": "Acanthamoeba.Functions"
+		},
+		{
+			"path": "Azure.Services.AppAuthentication"
+		}
+	],
+	"settings": {
+		"debug.internalConsoleOptions": "neverOpen"
+	}
+}
